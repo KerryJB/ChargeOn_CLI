@@ -1,3 +1,4 @@
+  // Includes
 #include "Project.h"
 #include "ChargeOn.h"
 #include "myRCSwitch.h"
@@ -13,15 +14,20 @@
 # define DEBUGGING                                          //  Yes, include DEBUGGING sections of this module in the compilation
 #endif
 
-  // Global variables
+  /* Global variables */
 SoftwareSerial SerialDebug( PRJ_DEBUG_RX_PIN, PRJ_DEBUG_TX_PIN );
 
-  // Local variables
+  /* Local variables */
 const byte numChars                 = 32;                   // This must be at least 2
       char receivedChars[numChars];
       bool bNewData;
 
-  // Static function prototypes
+#ifdef DEBUGGING
+unsigned long timeBeforeGetMsg;
+unsigned long timeAfterGetMsg;
+unsigned long timeAfterACK;
+#endif
+  /*  Static function prototypes */
 
 /***********************/
 /* Project entry point */
@@ -43,40 +49,53 @@ void loop() {
   RCS_SendOffCode( OUTLET_NUM );
   Serial.println( OFF_OK_SIGNAL );
   delay(4000);
-#endif
 
-#if 1
+#else
+
+#ifdef DEBUGGING
+  timeBeforeGetMsg = millis();
+#endif
   recvWithStartEndMarkers();
+#ifdef DEBUGGING
+  timeAfterGetMsg = millis();
+#endif
   if( bNewData ) {
-#if 0 // #ifdef DEBUGGING
-    SerialDebug.print( "This just in ... " );
-    SerialDebug.println( receivedChars );
-#endif
     if( !strcmp(receivedChars, WAKE_SIGNAL) ) {
-#ifdef DO_SERIAL_DEBUG
-      SerialDebug.print( "  Received \"WAKE\" signal, sending: " );
-      SerialDebug.println( ACK_SIGNAL );
+      Serial.print( WAKE_OK_SIGNAL );
+#ifdef DEBUGGING
+      timeAfterACK = millis();
+      SerialDebug.print( "  Sending reply: " );
+      SerialDebug.println( WAKE_OK_SIGNAL );
 #endif
-      Serial.print( ACK_SIGNAL );
     }
     else if( !strcmp(receivedChars, ON_SIGNAL) ) {
-#ifdef DO_SERIAL_DEBUG
-      SerialDebug.print( "  Received \"ON\" signal, sending: " );
+      Serial.print( ON_OK_SIGNAL );
+#ifdef DEBUGGING
+      timeAfterACK = millis();
+      SerialDebug.print( "  Sending reply: " );
       SerialDebug.println( ON_OK_SIGNAL );
 #endif
       RCS_SendOnCode( OUTLET_NUM );
-      Serial.print( ON_OK_SIGNAL );
     }
     else if( !strcmp(receivedChars, OFF_SIGNAL) ) {
-#ifdef DO_SERIAL_DEBUG
-      SerialDebug.print( "  Received \"OFF\" signal, sending: " );
+      Serial.print( OFF_OK_SIGNAL );
+#ifdef DEBUGGING
+      timeAfterACK = millis();
+      SerialDebug.print( "  Sending reply: " );
       SerialDebug.println( OFF_OK_SIGNAL );
 #endif
       RCS_SendOffCode( OUTLET_NUM );
-      Serial.print( OFF_OK_SIGNAL );
     }
     receivedChars[0] = '\0';                                // "Clear out" the latest input string
     bNewData         = false;                               // We no longer have an "active" input string
+#ifdef DEBUGGING
+    SerialDebug.print( "    timeBeforeGetMsg = " );
+    SerialDebug.println( timeBeforeGetMsg );
+    SerialDebug.print( "    timeAfterGetMsg  = " );
+    SerialDebug.println( timeAfterGetMsg );
+    SerialDebug.print( "    timeAfterACK     = " );
+    SerialDebug.println( timeAfterACK );
+#endif
   }
 #endif
 }
@@ -90,9 +109,12 @@ void recvWithStartEndMarkers() {
  
   while( Serial.available() ) {                             // While data is waiting...
     rc = Serial.read();                                     //  Read the next byte
-#if 1
-SerialDebug.print( rc );                    /* Not sure why this line seems to be necessary! */
-                                            /* Without it, the received characters do not "register" for some reason... */
+                                 /* KJB: Not sure why the following delay seems to be necessary? */
+                                 /* KJB: Without it, the received characters do not seem to "register" ... */
+#ifdef DEBUGGING
+    SerialDebug.print( rc );     /* KJB: The delay is "implied" here; it takes a while to do the "print" */
+#else
+    delay(4);                    /* KJB: Values from 3 to 20 have tested OK on my PC */
 #endif
     if( !recvInProgress && (rc != startMarker) ) {          //  Have we seen the start marker yet?
       continue;                                             //   No, throw away the new byte
@@ -104,12 +126,11 @@ SerialDebug.print( rc );                    /* Not sure why this line seems to b
       }
       else if( (ndx == numChars) || (rc == endMarker) ) {   //     No, buffer is full or new byte is the end marker?
         receivedChars[ndx] = '\0';                          //      Yes, null-terminate the buffer
-        bNewData = true;                                    //       We have a complete input string
-#if 1
+        bNewData = true;                                    //       We now have a complete input string
+#ifdef DEBUGGING
 SerialDebug.println( " " );
 #endif
-
-        break;                                              //       Exit the loop; we're done!
+        break;                                              //       Exit the loop - we're done!
       }
     }
   }  // while loop

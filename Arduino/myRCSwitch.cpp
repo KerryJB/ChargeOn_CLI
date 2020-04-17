@@ -1,9 +1,10 @@
+  /*  Includes */
 #include <RCSwitch.h>
 #include "Project.h"
 #include "ChargeOn.h"
 #include "myRCSwitch.h"
 
-// Module-specific defines
+  /* Module-specific defines */
 #if defined(PRJ_DEBUGGING) && defined(MYRCS_DEBUGGING)      // Is debugging enabled for the whole project and for this module?
 # define DEBUGGING                                          //  Yes, include DEBUGGING sections of this module in the compilation
 #endif
@@ -40,7 +41,7 @@
 # define OUTLET_5_OFF   5338380
 #endif
 
-// Static variables
+  /* Static variables */
 static RCSwitch  mySwitch        = RCSwitch();
                           // Offset:  0       1             2             3             4             5
 static long      OutletOnCode[]  = { -1, OUTLET_1_ON,  OUTLET_2_ON,  OUTLET_3_ON,  OUTLET_4_ON,  OUTLET_5_ON  };
@@ -49,7 +50,7 @@ static long      OutletOffCode[] = { -1, OUTLET_1_OFF, OUTLET_2_OFF, OUTLET_3_OF
 void RCSwitchSetup( void ) {
   mySwitch.enableTransmit( RCS_OUTPIN );                    // Assign output pin for transmitter data connection
 #ifdef DEBUGGING
-  SerialDebug.print( "Enabled Transmit on pin ");
+  SerialDebug.print( "433MHz transmission enabled on pin ");
   SerialDebug.println( RCS_OUTPIN );
 #endif
   // mySwitch.setProtocol( 2 );                             // (Optional) Set protocol; default is 1, will work for most outlets
