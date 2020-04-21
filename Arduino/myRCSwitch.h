@@ -1,3 +1,5 @@
+#include <RCSwitch.h>
+
 #ifndef MYRCSWITCH_H
 #  define MYRCSWITCH_H
 

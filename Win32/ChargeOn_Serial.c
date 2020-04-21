@@ -189,21 +189,27 @@ static BOOL SetPortState( HANDLE hSerial )
 
 BOOL SendSignal_GetResponse( HANDLE hSerial, SerialExchangeType talkType )
 {
-  TalkParams chat[] = { {WAKE_SIGNAL,  WAKE_OK_SIGNAL,  WAKE_ERROR},
-                        {ON_SIGNAL,    ON_OK_SIGNAL,    TURN_ON_ERROR},
-                        {OFF_SIGNAL,   OFF_OK_SIGNAL,   TURN_OFF_ERROR} };
-  char  *OutBuffer        = chat[talkType].signal;         // OutBuffer should be char or byte array, otherwise write will fail
-  DWORD dNoOfBytesToWrite = strlen(OutBuffer);             // Number of bytes to write to the port
-  DWORD dNoOfBytesWritten = 0;                             // Number of bytes actually written to the port
-
+  const TalkParams chat[]  = { {WAKE_SIGNAL,  WAKE_OK_SIGNAL,  WAKE_ERROR},
+                             {ON_SIGNAL,    ON_OK_SIGNAL,    TURN_ON_ERROR},
+                             {OFF_SIGNAL,   OFF_OK_SIGNAL,   TURN_OFF_ERROR} };
+  char  *OutBuffer         = chat[talkType].signal;        // OutBuffer should be char or byte array, otherwise write will fail
+  DWORD dwNoOfBytesToWrite = strlen(OutBuffer);            // Number of bytes to write to the port
+  DWORD dwNoOfBytesWritten = 0;                            // Number of bytes actually written to the port
+  DWORD dwSleepPeriod      = (dwNoOfBytesToWrite * 2) * ((12 * 9600) / MY_BAUDRATE);
+                                                           
   char  InBuffer[15];
-  DWORD dNoOfBytesToRead  = strlen( chat[talkType].expectedResponse );
+  DWORD dwNoOfBytesToRead  = strlen( chat[talkType].expectedResponse );
                                                            // Number of bytes to read from the port
-  DWORD dNoOfBytesRead    = 0;                             // Number of bytes actually read from the port
+  DWORD dwNoOfBytesRead    = 0;                            // Number of bytes actually read from the port
+
+#ifdef DEBUG
+  printf( "\nSleep period = %ld\n",   dwSleepPeriod );
+#endif
+
   if( !WriteFile(hSerial,
                  OutBuffer,
-                 dNoOfBytesToWrite,
-                 &dNoOfBytesWritten,
+                 dwNoOfBytesToWrite,
+                 &dwNoOfBytesWritten,
                  NULL)
     ) {                                                    // Able to write signal to serial port?
     printf("** ERROR writing to serial port %s **\n", chat[talkType].errorMessage );
@@ -211,23 +217,23 @@ BOOL SendSignal_GetResponse( HANDLE hSerial, SerialExchangeType talkType )
     return FALSE;                                          //  and FAIL
   }
   else {                                                   //  Yes...
-    Sleep( 200 );                                          //   Allow time for microcontroller to send response
+    Sleep( dwSleepPeriod );                                //   Allow plenty of time for microcontroller to send response
     if( !ReadFile(hSerial,
                   InBuffer,
-                  dNoOfBytesToRead,
-                  &dNoOfBytesRead,
+                  dwNoOfBytesToRead,
+                  &dwNoOfBytesRead,
                   NULL) ) {                                //   Able to read response from serial port?
       printf("** ERROR reading from serial port %s **\n", chat[talkType].errorMessage );
                                                            //    No, print error message
       return FALSE;                                        //    and FAIL
     }
-    else if( strncmp(InBuffer, chat[talkType].expectedResponse, dNoOfBytesToRead) ) {
+    else if( strncmp(InBuffer, chat[talkType].expectedResponse, dwNoOfBytesToRead) ) {
                                                            //    Yes, did we get the *expected* response?
       printf("** ERROR: Received unexpected response \"%s\" from serial port %s **\n", InBuffer, chat[talkType].errorMessage );
                                                            //     No, print error message
       return FALSE;                                        //     and FAIL
     }
-    else {
+    else {                                                 //    Yes, did we get the *expected* response?
       return TRUE;                                         //     Yes, success!
     }
   }

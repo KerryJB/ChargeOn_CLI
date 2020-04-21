@@ -4,7 +4,7 @@
 #include <SoftwareSerial.h>
 
   // Project-wide defines
-#define PRJ_DEBUGGING                                       // When this is defined, each module can be configured for debugging separately
+//#define PRJ_DEBUGGING                                       // When this is defined, each module can be configured for debugging separately
 
 //#define PRJ_BAUD_RATE     96000
 //#define PRJ_BAUD_RATE     14400

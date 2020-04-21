@@ -1,5 +1,4 @@
   /*  Includes */
-#include <RCSwitch.h>
 #include "Project.h"
 #include "ChargeOn.h"
 #include "myRCSwitch.h"
@@ -9,26 +8,14 @@
 # define DEBUGGING                                          //  Yes, include DEBUGGING sections of this module in the compilation
 #endif
 
-#define RCS_REPEATS          4                              // Number of times to repeat each transmission
-#define RCS_PULSELEN       181                              // Pulse length in microseconds (specific to Etekcity ZAP outlet set?)
+#define RCS_REPEATS     6                                   // Number of times to repeat each transmission
 
-//#define REMOTE_xxxx  // Sorensons' remote
-#define REMOTE_0304  // Burtons' remote
+//#define REMOTE_0304  // My ETEKCITY remotes
+#define REMOTE_0307  // My DEWENWILS remotes
 
-#ifdef REMOTE_xxxx  // Sorensons' remote
-# define OUTLET_1_ON    4199731
-# define OUTLET_1_OFF   4199740               
-# define OUTLET_2_ON    4199875
-# define OUTLET_2_OFF   4199884
-# define OUTLET_3_ON    4200195
-# define OUTLET_3_OFF   4200204
-# define OUTLET_4_ON    4201731
-# define OUTLET_4_OFF   4201740
-# define OUTLET_5_ON    4207875
-# define OUTLET_5_OFF   4207884
-#endif
+#if defined REMOTE_0304  // My ETEKCITY remotes
+# define RCS_PULSELEN   181                                 // Pulse length in microseconds for Etekcity ZAP
 
-#ifdef REMOTE_0304  // Burtons' remote
 # define OUTLET_1_ON    5330227
 # define OUTLET_1_OFF   5330236               
 # define OUTLET_2_ON    5330371
@@ -39,6 +26,20 @@
 # define OUTLET_4_OFF   5332236
 # define OUTLET_5_ON    5338371
 # define OUTLET_5_OFF   5338380
+
+#elif defined REMOTE_0307  // My DEWENWILS remotes
+# define RCS_PULSELEN   173                                 // Pulse length in microseconds for Dewenwils
+
+# define OUTLET_1_ON    87347
+# define OUTLET_1_OFF   87356
+# define OUTLET_2_ON    87491
+# define OUTLET_2_OFF   87500
+# define OUTLET_3_ON    87811
+# define OUTLET_3_OFF   87820
+# define OUTLET_4_ON    89347
+# define OUTLET_4_OFF   89356
+# define OUTLET_5_ON    95491
+# define OUTLET_5_OFF   95500
 #endif
 
   /* Static variables */
@@ -50,8 +51,8 @@ static long      OutletOffCode[] = { -1, OUTLET_1_OFF, OUTLET_2_OFF, OUTLET_3_OF
 void RCSwitchSetup( void ) {
   mySwitch.enableTransmit( RCS_OUTPIN );                    // Assign output pin for transmitter data connection
 #ifdef DEBUGGING
-  SerialDebug.print( "433MHz transmission enabled on pin ");
-  SerialDebug.println( RCS_OUTPIN );
+//  SerialDebug.print( "433MHz transmission enabled on pin ");
+//  SerialDebug.println( RCS_OUTPIN );
 #endif
   // mySwitch.setProtocol( 2 );                             // (Optional) Set protocol; default is 1, will work for most outlets
   mySwitch.setPulseLength( RCS_PULSELEN );                  // Set pulse length

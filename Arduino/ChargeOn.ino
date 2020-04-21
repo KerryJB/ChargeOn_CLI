@@ -15,18 +15,15 @@
 #endif
 
   /* Global variables */
+#ifdef DO_SERIAL_DEBUG
 SoftwareSerial SerialDebug( PRJ_DEBUG_RX_PIN, PRJ_DEBUG_TX_PIN );
+#endif
 
   /* Local variables */
 const byte numChars                 = 32;                   // This must be at least 2
       char receivedChars[numChars];
       bool bNewData;
 
-#ifdef DEBUGGING
-unsigned long timeBeforeGetMsg;
-unsigned long timeAfterGetMsg;
-unsigned long timeAfterACK;
-#endif
   /*  Static function prototypes */
 
 /***********************/
@@ -36,7 +33,6 @@ void setup() {
   Serial.begin( PRJ_BAUD_RATE );                            // For communicating with Windows "ChargeOn" program
 #ifdef DO_SERIAL_DEBUG
   SerialDebug.begin( PRJ_BAUD_RATE );                       // Start serial communications (for debugging) with project-defined baud rate
-//  SerialDebug.println( "Send-only Software Serial is ALIVE! " );
 #endif
   RCSwitchSetup();                                          // Initialize RF Transmitter
 }
@@ -52,18 +48,11 @@ void loop() {
 
 #else
 
-#ifdef DEBUGGING
-  timeBeforeGetMsg = millis();
-#endif
   recvWithStartEndMarkers();
-#ifdef DEBUGGING
-  timeAfterGetMsg = millis();
-#endif
   if( bNewData ) {
     if( !strcmp(receivedChars, WAKE_SIGNAL) ) {
       Serial.print( WAKE_OK_SIGNAL );
 #ifdef DEBUGGING
-      timeAfterACK = millis();
       SerialDebug.print( "  Sending reply: " );
       SerialDebug.println( WAKE_OK_SIGNAL );
 #endif
@@ -71,7 +60,6 @@ void loop() {
     else if( !strcmp(receivedChars, ON_SIGNAL) ) {
       Serial.print( ON_OK_SIGNAL );
 #ifdef DEBUGGING
-      timeAfterACK = millis();
       SerialDebug.print( "  Sending reply: " );
       SerialDebug.println( ON_OK_SIGNAL );
 #endif
@@ -80,7 +68,6 @@ void loop() {
     else if( !strcmp(receivedChars, OFF_SIGNAL) ) {
       Serial.print( OFF_OK_SIGNAL );
 #ifdef DEBUGGING
-      timeAfterACK = millis();
       SerialDebug.print( "  Sending reply: " );
       SerialDebug.println( OFF_OK_SIGNAL );
 #endif
@@ -88,34 +75,22 @@ void loop() {
     }
     receivedChars[0] = '\0';                                // "Clear out" the latest input string
     bNewData         = false;                               // We no longer have an "active" input string
-#ifdef DEBUGGING
-    SerialDebug.print( "    timeBeforeGetMsg = " );
-    SerialDebug.println( timeBeforeGetMsg );
-    SerialDebug.print( "    timeAfterGetMsg  = " );
-    SerialDebug.println( timeAfterGetMsg );
-    SerialDebug.print( "    timeAfterACK     = " );
-    SerialDebug.println( timeAfterACK );
-#endif
   }
 #endif
 }
 
 void recvWithStartEndMarkers() {
-   const char    startMarker    = '<';
-   const char    endMarker      = '>';
-         boolean recvInProgress = false;
-         byte    ndx            = 0;
-         char    rc;
+  const char    startMarker    = '<';
+  const char    endMarker      = '>';
+        boolean recvInProgress = false;
+        byte    ndx            = 0;
+        char    rc;
  
   while( Serial.available() ) {                             // While data is waiting...
     rc = Serial.read();                                     //  Read the next byte
                                  /* KJB: Not sure why the following delay seems to be necessary? */
                                  /* KJB: Without it, the received characters do not seem to "register" ... */
-#ifdef DEBUGGING
-    SerialDebug.print( rc );     /* KJB: The delay is "implied" here; it takes a while to do the "print" */
-#else
-    delay(4);                    /* KJB: Values from 3 to 20 have tested OK on my PC */
-#endif
+    delay(1);
     if( !recvInProgress && (rc != startMarker) ) {          //  Have we seen the start marker yet?
       continue;                                             //   No, throw away the new byte
     }
@@ -124,12 +99,9 @@ void recvWithStartEndMarkers() {
       if( (rc == startMarker) && (ndx == 1) ) {             //    New byte IS the (first) start marker?
         recvInProgress = true;                              //     Yes, we're now between the start marker and end marker
       }
-      else if( (ndx == numChars) || (rc == endMarker) ) {   //     No, buffer is full or new byte is the end marker?
+      else if( (ndx == numChars) || (rc == endMarker) ) {   //     No, is buffer full, or is new byte the end marker?
         receivedChars[ndx] = '\0';                          //      Yes, null-terminate the buffer
         bNewData = true;                                    //       We now have a complete input string
-#ifdef DEBUGGING
-SerialDebug.println( " " );
-#endif
         break;                                              //       Exit the loop - we're done!
       }
     }
