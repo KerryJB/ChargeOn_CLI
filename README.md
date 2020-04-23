@@ -5,4 +5,4 @@ Windows laptop battery conditioner
 * Win32 API program
 * Arduino board and program
 * 433MHz transmitter module
-* ETEKCITY remote outlet switch
+* 433MHz remote outlet switch (tested with Etekcity ZAP and Dewenwils)
