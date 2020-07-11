@@ -1,4 +1,4 @@
-# ChargeOn
+# ChargeOn_CLI
 Windows laptop battery conditioner (Command Line Interface version)
 
 ## Components
