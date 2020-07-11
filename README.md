@@ -1,5 +1,5 @@
 # ChargeOn
-Windows laptop battery conditioner
+Windows laptop battery conditioner (Command Line Interface version)
 
 ## Components
 * Win32 API program
